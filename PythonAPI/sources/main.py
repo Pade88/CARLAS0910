@@ -39,6 +39,7 @@ class setUp():
         self.lista_pozitii_spawn = self.lume.get_map().get_spawn_points() # Aleatoriu, td -> setata prin parametru
         self.blueprint_library = self.lume.get_blueprint_library()
         tm = self.client.get_trafficmanager(2000)
+        self.lume.set_weather(carla.WeatherParameters.ClearNoon)
         if numar_vehicule > 0 and numar_vehicule < len(self.lista_pozitii_spawn):
             for _ in range(numar_vehicule):
                 pozitie_spawn = random.choice(self.lista_pozitii_spawn) # Se selecteaza aleator coordonatele de spawnare
