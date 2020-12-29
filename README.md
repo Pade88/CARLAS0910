@@ -3,12 +3,12 @@
 # Status:  
 &nbsp;Functional  
 # De adaugat:  
-&nbsp;Procesarea imaginii in paralel  
-&nbsp;Populare cu pietoni  
-&nbsp;Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU  
-&nbsp;De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
-Salvarea fisierului video
-
+1.Procesarea imaginii in paralel  
+2.Populare cu pietoni  
+3.Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU  
+4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
+5.Salvarea fisierului video (V1.03)
+6.Logging
 
 #  Version Log:  
 ##1.00  
@@ -23,5 +23,4 @@ Salvarea fisierului video
 ->Rezolvata problema in care outputul camerei sarea peste frame-uri.
 ->Imbunatatit sistemul de aplicare a auto pilotului
 ->Separare intre senzori si vehicule
-->Mecanismul de vizualizare nu mai este acum in real time, probleme cu frame-drops si fps, generate de Unreal Engine. Simularea este rulata, imaginile sunt salvate intr-un  
-buffer care este afisat la finalul simularii.
+->Mecanismul de vizualizare nu mai este acum in real time, probleme cu frame-drops si fps, generate de Unreal Engine. Simularea este rulata, imaginile sunt salvate intr-un buffer care este afisat la finalul simularii.
