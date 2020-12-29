@@ -7,7 +7,7 @@
 2.Populare cu pietoni  
 3.Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU -> Abordat in V1.03 si V1.04  
 4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
-5.Salvarea fisierului video (V1.03) -> Rezolvat in (1.04)
+5.Salvarea fisierului video (V1.03) -> Rezolvat in (1.04)  
 6.Logging  
 7.Pornire automata server (V1.04)
 
@@ -25,7 +25,7 @@ https://youtu.be/6KcKXASQX8A
 ->Rezolvata problema in care outputul camerei sarea peste frame-uri.
 ->Imbunatatit sistemul de aplicare a auto pilotului
 ->Separare intre senzori si vehicule
-->Mecanismul de vizualizare nu mai este acum in real time, probleme cu frame-drops si fps, generate de Unreal Engine. Simularea este rulata, imaginile sunt salvate intr-un buffer care este afisat la finalul simularii.
+->Mecanismul de vizualizare nu mai este acum in real time, probleme cu frame-drops si fps, generate de Unreal Engine. Simularea este rulata, imaginile sunt salvate intr-un buffer care este afisat la finalul simularii.  
 ##1.04
 ->Adaugata posibilitatea de a salva videoclipul  
 ->Izolate listele cu senzori si vehicule  
