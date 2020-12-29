@@ -2,7 +2,7 @@ import glob
 import os
 import sys
 import random
-
+import psutil
 import cv2
 import numpy as np
 
@@ -14,6 +14,7 @@ try:
 except IndexError:
     pass
 
+carla_path = "D:\CARLA_0.9.10"
 import datetime
 import carla
 import time
@@ -25,16 +26,19 @@ IM_HEIGHT = 720
 
 class setUp():
     def __init__(self, numar_vehicule=0):
+        #self.startCARLA()
         self.numar_vehicule = numar_vehicule
-        self.lista_obiect = []  # se populeaza cu vehicule, senzori, obiecte
+        self.lista_vehicule = []  # se populeaza cu vehicule
+        self.lista_senzori = []
         self.stabileste_conexiunea()
         self.genereaza_mediu(numar_vehicule)
 
     def run(self):
         self.applyAutoPilot()
 
-    def release(self):
-        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_obiect])
+    def stop(self):
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_vehicule])
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_senzori])
 
     def stabileste_conexiunea(self):
         self.client = carla.Client("127.0.0.1", 2000)  # server, port
@@ -53,7 +57,7 @@ class setUp():
                     self.lista_pozitii_spawn)  # Se selecteaza aleator coordonatele de spawnare
                 tip_vehicul = random.choice(self.blueprint_library.filter('vehicle.*'))
                 self.vehicul = self.lume.spawn_actor(tip_vehicul, pozitie_spawn)
-                self.lista_obiect.append(self.vehicul)  # Se adauga vehiculul creat in lista de obiecte
+                self.lista_vehicule.append(self.vehicul)  # Se adauga vehiculul creat in lista de obiecte
                 self.lista_pozitii_spawn.remove(pozitie_spawn)  # Pozitia de spawn este stearsa din lista
         else:
             print("Numarul de vehicule poate genera probleme!")  # tb, raise error
@@ -61,8 +65,22 @@ class setUp():
     def applyAutoPilot(self):
         tm = self.client.get_trafficmanager(2000)
         tm_port = tm.get_port()
-        for v in self.lista_obiect:
+        for v in self.lista_vehicule:
             v.set_autopilot(True, tm_port)
+
+    # @todo bug fix -> ramane agatata pe undeva ? :))
+    def startCARLA(self):
+        try:
+            os.chdir(carla_path)
+            if not ("CarlaUE4.exe" in (process.name() for process in psutil.process_iter())):
+                os.system("CarlaUE4.exe --windowed --resX=1280 --resY=720")
+            else:
+                print("E deja pornit!")
+
+        except FileNotFoundError:
+            print("Nu s-a gasit directorul " + str(carla_path))
+        finally:
+            pass
 
     def getBP(self):
         return self.blueprint_library
@@ -74,7 +92,10 @@ class setUp():
         return self.lume
 
     def addActor(self, actor):
-        self.lista_obiect.append(actor)
+        self.lista_vehicule.append(actor)
+
+    def addSensor(self, sensor):
+        self.lista_senzori.append(sensor)
 
 
 class MyVehicle():
@@ -90,7 +111,6 @@ class MyVehicle():
         self.enviroment.addActor(self.MyCar)
 
     def attachCam(self):
-        self.sensors_list = []
         self.camera = self.enviroment.getBP().find('sensor.camera.rgb')
         self.camera.set_attribute('image_size_x', f'{IM_WIDTH}')
         self.camera.set_attribute('image_size_y', f'{IM_HEIGHT}')
@@ -99,42 +119,37 @@ class MyVehicle():
         self.camera.set_attribute('sensor_tick', '1.0')
         spawn_point = carla.Transform(carla.Location(x=1.8, z=2))  # FPS -> {0.5 0.4 1.2}, Central = {1.8, 2}
         self.camera_sensor = self.enviroment.getWorld().spawn_actor(self.camera, spawn_point, attach_to=self.MyCar)
-        self.sensors_list.append(self.camera_sensor)
-        self.camera_sensor.listen(lambda data: self.auto_replay(data))
+        self.enviroment.addSensor(self.camera_sensor)
+        self.camera_sensor.listen(lambda data: self.save_replay(data))
 
     def process_img(self, image):
-        start = datetime.datetime.now()
         imagine_matrice = np.array(image.raw_data)  # conversie imagine in array numpy (RGBA)
         imagine_modificata = imagine_matrice.reshape((IM_HEIGHT, IM_WIDTH, 4))  # redimennsionarea in RGBA
-        imagine_convertita = imagine_modificata[200:480, 0:580,
-                             :3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
+        imagine_convertita = imagine_modificata[200:480, 0:580,3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
         cv2.imshow("", imagine_convertita)
         cv2.waitKey(1)
-        print("Imaginea procesata si afisata in : " + str(datetime.datetime.now() - start))
         return imagine_convertita / 255.0  # normalizare la spectrul RGBA, de folosit in viitor
 
-    def auto_replay(self, image):
+    def save_replay(self, image):
         imagine_matrice = np.array(image.raw_data)  # conversie imagine in array numpy (RGBA)
         imagine_modificata = imagine_matrice.reshape((IM_HEIGHT, IM_WIDTH, 4))  # redimennsionarea in RGBA
         imagine_convertita = imagine_modificata[:, :,:3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
         self.lista_imagini_achizitionate.append(imagine_convertita)
 
     def playback(self):
-        print(len(self.lista_imagini_achizitionate))
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video = cv2.VideoWriter('video.mp4', fourcc, 1, (IM_WIDTH, IM_HEIGHT))
-
+        video = cv2.VideoWriter('VideoOutput.avi', cv2.VideoWriter_fourcc(*'MJPG'), 60, (1280, 720))
         for frame in self.lista_imagini_achizitionate:
-            cv2.imshow("Simulation Result", frame)
-            cv2.waitKey(1)
+            cv2.imshow("Simulation video", frame)
+            cv2.waitKey(1) # 16 ms => 1000 / 16 => 60 fps
+            video.write(frame)
         cv2.destroyAllWindows()
-
+        video.release()
 
 if __name__ == "__main__":
-    environment = setUp(80)
+    environment = setUp(50)
     myCar = MyVehicle(environment, "Tesla")
 
     environment.run()
-    time.sleep(10)
-    environment.release()
+    time.sleep(35)
+    environment.stop()
     myCar.playback()
