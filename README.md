@@ -27,6 +27,7 @@ https://youtu.be/6KcKXASQX8A
 ->Separare intre senzori si vehicule  
 ->Mecanismul de vizualizare nu mai este acum in real time, probleme cu frame-drops si fps, generate de Unreal Engine. Simularea este rulata, imaginile sunt salvate intr-un buffer care este afisat la finalul simularii.  
 **1.04**    
+https://youtu.be/8eTqcVskhN4  
 ->Adaugata posibilitatea de a salva videoclipul  
 ->Izolate listele cu senzori si vehicule  
 ->Mici modificari de sintaxa
