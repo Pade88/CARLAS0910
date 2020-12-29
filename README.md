@@ -18,8 +18,9 @@
 -> Adaugata posibilitatea de a selecta lumea in care se desfasoara simularea (Dezactivata, destul de inceata tranzitia)
 ##1.02  
 ->Migrat pe noua versiune de CARLA, 0.9.10
-->Adaugat control pentru vreme, de vazut influenta asupra camerei
-##1.03
+->Adaugat control pentru vreme, de vazut influenta asupra camerei  
+##1.03  
+https://youtu.be/6KcKXASQX8A  
 ->Rezolvata problema in care outputul camerei sarea peste frame-uri.
 ->Imbunatatit sistemul de aplicare a auto pilotului
 ->Separare intre senzori si vehicule
