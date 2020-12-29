@@ -7,7 +7,7 @@
 2.Populare cu pietoni  
 3.Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU  
 4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
-5.Salvarea fisierului video (V1.03)
+5.Salvarea fisierului video (V1.03)  
 6.Logging
 
 #  Version Log:  
