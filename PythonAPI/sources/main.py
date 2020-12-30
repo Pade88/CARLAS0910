@@ -25,13 +25,19 @@ IM_HEIGHT = 720
 
 
 class setUp():
-    def __init__(self, numar_vehicule=0):
-        #self.startCARLA()
+    def __init__(self, townName = '', numar_vehicule=0, numar_pietoni = 0):
         self.numar_vehicule = numar_vehicule
+        self.numar_pietoni = numar_pietoni
+        if townName is '':
+            self.town_name = 'Town01'
+        else:
+            self.town_name = townName
         self.lista_vehicule = []  # se populeaza cu vehicule
         self.lista_senzori = []
+        self.lista_pietoni = []
         self.stabileste_conexiunea()
         self.genereaza_mediu(numar_vehicule)
+        self.adaugaPietoni(numar_pietoni)
 
     def run(self):
         self.applyAutoPilot()
@@ -39,11 +45,18 @@ class setUp():
     def stop(self):
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_vehicule])
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_senzori])
+        for i in range(0, len(self.all_id), 2):
+            self.all_actors[i].stop()
+        self.client.apply_batch([carla.command.DestroyActor(x) for x in self.all_id])
 
     def stabileste_conexiunea(self):
         self.client = carla.Client("127.0.0.1", 2000)  # server, port
-        self.client.set_timeout(2.0)  # Timp de asteptare pentru setarea mediului (recomandat 10s, suficient 2s)
-        self.lume = self.client.load_world('Town02')  # Default este 03, optiuni intre 01 si 07
+        if self.town_name is not 'Town10HD':
+            self.client.set_timeout(2.0)  # Timp de asteptare pentru setarea mediului (recomandat 10s, suficient 2s)
+        else:
+            self.client.set_timeout(10.0)
+        # Town07 contine semne de Stop si Yield
+        self.lume = self.client.load_world(self.town_name)  # Default este 03, optiuni intre 01 si 07 Town10HD
         # self.lume = self.client.get_world()
 
     def genereaza_mediu(self, numar_vehicule=0):
@@ -61,6 +74,48 @@ class setUp():
                 self.lista_pozitii_spawn.remove(pozitie_spawn)  # Pozitia de spawn este stearsa din lista
         else:
             print("Numarul de vehicule poate genera probleme!")  # tb, raise error
+
+    def adaugaPietoni(self, numar_pietoni):
+        self.lista_pozitii_spawn_pietoni = []
+        blueprintsWalkers = self.lume.get_blueprint_library().filter("walker.pedestrian.*")
+        walkers_list = []
+        self.all_id = []
+        for _ in range(numar_pietoni):
+            spawn_point = carla.Transform()
+            spawn_point.location = self.lume.get_random_location_from_navigation()
+            spawn_point.location.z += 1
+            if spawn_point is not None and spawn_point not in self.lista_pozitii_spawn_pietoni:
+                self.lista_pozitii_spawn_pietoni.append(spawn_point)
+
+        batch = []
+        for spawn_point in self.lista_pozitii_spawn_pietoni:
+            walker_bp = random.choice(blueprintsWalkers)
+            batch.append(carla.command.SpawnActor(walker_bp, spawn_point))
+
+        # apply the batch
+        results = self.client.apply_batch_sync(batch, True)
+        for index in range(len(results)):
+            walkers_list.append({"id": results[index].actor_id})
+
+        batch = []
+        walker_controller_bp = self.lume.get_blueprint_library().find('controller.ai.walker')
+        for index in range(len(walkers_list)):
+            batch.append(carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[index]["id"]))
+
+        results = self.client.apply_batch_sync(batch, True)
+        for index in range(len(results)):
+            walkers_list[index]["con"] = results[index].actor_id
+
+        for index in range(len(walkers_list)):
+            self.all_id.append(walkers_list[index]["con"])
+            self.all_id.append(walkers_list[index]["id"])
+            self.all_actors = self.lume.get_actors(self.all_id)
+
+        for index in range(0, len(self.all_actors), 2):
+            self.all_actors[index].start() # porneste controller
+            self.all_actors[index].go_to_location(self.lume.get_random_location_from_navigation()) # se deplaseaza la o pozitie aleatorie
+            self.all_actors[index].set_max_speed(1 + random.random()) # cu o viteza aleatorie
+
 
     def applyAutoPilot(self):
         tm = self.client.get_trafficmanager(2000)
@@ -117,7 +172,7 @@ class MyVehicle():
         self.camera.set_attribute('fov', '110')
         # self.camera.set_attribute('enable_postprocess_effects', str(False))
         self.camera.set_attribute('sensor_tick', '1.0')
-        spawn_point = carla.Transform(carla.Location(x=1.8, z=2))  # FPS -> {0.5 0.4 1.2}, Central = {1.8, 2}
+        spawn_point = carla.Transform(carla.Location(x=1,z=1.2 ))  # FOV 110: 3RD {x=-5, z=2} Central {x=1, z=1.2}, FPS{x=.5, y=-.4, z=1.1}
         self.camera_sensor = self.enviroment.getWorld().spawn_actor(self.camera, spawn_point, attach_to=self.MyCar)
         self.enviroment.addSensor(self.camera_sensor)
         self.camera_sensor.listen(lambda data: self.save_replay(data))
@@ -146,10 +201,10 @@ class MyVehicle():
         video.release()
 
 if __name__ == "__main__":
-    environment = setUp(50)
-    myCar = MyVehicle(environment, "Tesla")
+    environment = setUp("Town03", 50, 150)
+    myCar = MyVehicle(environment, "model3")
 
     environment.run()
-    time.sleep(35)
+    time.sleep(10)
     environment.stop()
     myCar.playback()
