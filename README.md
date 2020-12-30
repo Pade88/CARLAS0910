@@ -4,7 +4,7 @@
 &nbsp;Functional  
 # De adaugat:  
 1.Procesarea imaginii in paralel  
-2.Populare cu pietoni  
+2.Populare cu pietoni -> Rezolvat in (1.05)  
 3.Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU -> Abordat in V1.03 si V1.04  
 4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
 5.Salvarea fisierului video (V1.03) -> Rezolvat in (1.04)  
@@ -30,4 +30,8 @@ https://youtu.be/6KcKXASQX8A
 https://youtu.be/8eTqcVskhN4  
 ->Adaugata posibilitatea de a salva videoclipul  
 ->Izolate listele cu senzori si vehicule  
-->Mici modificari de sintaxa
+->Mici modificari de sintaxa  
+**1.05**  
+->Pietoni adaugati  
+->Adaugat town10HD, maps update  
+->Mici imbunatatiri  
