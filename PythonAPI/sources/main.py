@@ -14,57 +14,55 @@ try:
 except IndexError:
     pass
 
-carla_path = "D:\CARLA_0.9.10"
-import datetime
 import carla
 import time
-import multiprocessing
+carla_path = "D:\CARLA_0.9.10"
 
-IM_WIDTH = 1280
-IM_HEIGHT = 720
+IM_WIDTH = 1920
+IM_HEIGHT = 1080
 
 
-class setUp():
-    def __init__(self, townName = '', numar_vehicule=0, numar_pietoni = 0):
+class SetUp:
+    def __init__(self, townName='', numar_vehicule=0, numar_pietoni=0):
         self.numar_vehicule = numar_vehicule
         self.numar_pietoni = numar_pietoni
-        if townName is '':
-            self.town_name = 'Town01'
-        else:
-            self.town_name = townName
-        self.lista_vehicule = []  # se populeaza cu vehicule
+        self.lista_vehicule = []
         self.lista_senzori = []
         self.lista_pietoni = []
-        self.stabileste_conexiunea()
+        self.stabileste_conexiunea(townName)
         self.genereaza_mediu(numar_vehicule)
         self.adaugaPietoni(numar_pietoni)
 
-    def run(self):
+    def run(self, pv_execution_time):
+        self.execution_time = pv_execution_time
         self.applyAutoPilot()
+        time.sleep(self.execution_time)
 
+    # @todo index out of range error
     def stop(self):
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_vehicule])
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.lista_senzori])
-        for i in range(0, len(self.all_id), 2):
-            self.all_actors[i].stop()
+        try:
+            for i in range(0, len(self.all_id), 2):
+                self.all_actors[i].stop()
+        except IndexError:
+            pass
         self.client.apply_batch([carla.command.DestroyActor(x) for x in self.all_id])
 
-    def stabileste_conexiunea(self):
+    def stabileste_conexiunea(self, townName):
         self.client = carla.Client("127.0.0.1", 2000)  # server, port
-        if self.town_name is not 'Town10HD':
-            self.client.set_timeout(2.0)  # Timp de asteptare pentru setarea mediului (recomandat 10s, suficient 2s)
-        else:
-            self.client.set_timeout(10.0)
-        # Town07 contine semne de Stop si Yield
-        self.lume = self.client.load_world(self.town_name)  # Default este 03, optiuni intre 01 si 07 Town10HD
-        # self.lume = self.client.get_world()
+        available_maps = [city.split('/')[4] for city in self.client.get_available_maps()]
+        self.town_name = townName if townName in available_maps else "Town01"
+        self.lume = self.client.load_world(
+            self.town_name)  # Default este 03, optiuni intre 01 si 07 Town10HD, # Town07 contine semne de Stop si Yield
+        self.client.set_timeout(2.0) if self.town_name != "Town10HD" else self.client.set_timeout(
+            5.0)  # Timp de asteptare pentru setarea mediului (recomandat 10s, suficient 2s)
 
     def genereaza_mediu(self, numar_vehicule=0):
         self.lista_pozitii_spawn = self.lume.get_map().get_spawn_points()  # Aleatoriu, td -> setata prin parametru
         self.blueprint_library = self.lume.get_blueprint_library()
-        tm = self.client.get_trafficmanager(2000)
         self.lume.set_weather(carla.WeatherParameters.Default)
-        if numar_vehicule > 0 and numar_vehicule < len(self.lista_pozitii_spawn):
+        if 0 < numar_vehicule < len(self.lista_pozitii_spawn):
             for _ in range(numar_vehicule):
                 pozitie_spawn = random.choice(
                     self.lista_pozitii_spawn)  # Se selecteaza aleator coordonatele de spawnare
@@ -112,16 +110,16 @@ class setUp():
             self.all_actors = self.lume.get_actors(self.all_id)
 
         for index in range(0, len(self.all_actors), 2):
-            self.all_actors[index].start() # porneste controller
-            self.all_actors[index].go_to_location(self.lume.get_random_location_from_navigation()) # se deplaseaza la o pozitie aleatorie
-            self.all_actors[index].set_max_speed(1 + random.random()) # cu o viteza aleatorie
-
+            self.all_actors[index].start()  # porneste controller
+            self.all_actors[index].go_to_location(
+                self.lume.get_random_location_from_navigation())  # se deplaseaza la o pozitie aleatorie
+            self.all_actors[index].set_max_speed(1 + random.random())  # cu o viteza aleatorie
 
     def applyAutoPilot(self):
         tm = self.client.get_trafficmanager(2000)
         tm_port = tm.get_port()
-        for v in self.lista_vehicule:
-            v.set_autopilot(True, tm_port)
+        for vehicul in self.lista_vehicule:
+            vehicul.set_autopilot(True, tm_port)
 
     # @todo bug fix -> ramane agatata pe undeva ? :))
     def startCARLA(self):
@@ -153,7 +151,7 @@ class setUp():
         self.lista_senzori.append(sensor)
 
 
-class MyVehicle():
+class MyVehicle:
     def __init__(self, venv, vehName):
         self.enviroment = venv
         self.lista_imagini_achizitionate = []
@@ -165,14 +163,15 @@ class MyVehicle():
                                                             random.choice(self.enviroment.getLeftSpawnPositions()))
         self.enviroment.addActor(self.MyCar)
 
+    # @todo Adaugat parametru de selctare + implementat alte tipuri de camere (DSV, SSC)
     def attachCam(self):
         self.camera = self.enviroment.getBP().find('sensor.camera.rgb')
         self.camera.set_attribute('image_size_x', f'{IM_WIDTH}')
         self.camera.set_attribute('image_size_y', f'{IM_HEIGHT}')
         self.camera.set_attribute('fov', '110')
-        # self.camera.set_attribute('enable_postprocess_effects', str(False))
-        self.camera.set_attribute('sensor_tick', '1.0')
-        spawn_point = carla.Transform(carla.Location(x=1,z=1.2 ))  # FOV 110: 3RD {x=-5, z=2} Central {x=1, z=1.2}, FPS{x=.5, y=-.4, z=1.1}
+        self.camera.set_attribute('sensor_tick', '0.0')
+        spawn_point = carla.Transform(
+            carla.Location(x=1, z=1.2))  # FOV 110: 3RD {x=-5, z=2} Central {x=1, z=1.2}, FPS{x=.5, y=-.4, z=1.1}
         self.camera_sensor = self.enviroment.getWorld().spawn_actor(self.camera, spawn_point, attach_to=self.MyCar)
         self.enviroment.addSensor(self.camera_sensor)
         self.camera_sensor.listen(lambda data: self.save_replay(data))
@@ -180,7 +179,8 @@ class MyVehicle():
     def process_img(self, image):
         imagine_matrice = np.array(image.raw_data)  # conversie imagine in array numpy (RGBA)
         imagine_modificata = imagine_matrice.reshape((IM_HEIGHT, IM_WIDTH, 4))  # redimennsionarea in RGBA
-        imagine_convertita = imagine_modificata[200:480, 0:580,3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
+        imagine_convertita = imagine_modificata[200:480, 0:580,
+                             3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
         cv2.imshow("", imagine_convertita)
         cv2.waitKey(1)
         return imagine_convertita / 255.0  # normalizare la spectrul RGBA, de folosit in viitor
@@ -188,23 +188,30 @@ class MyVehicle():
     def save_replay(self, image):
         imagine_matrice = np.array(image.raw_data)  # conversie imagine in array numpy (RGBA)
         imagine_modificata = imagine_matrice.reshape((IM_HEIGHT, IM_WIDTH, 4))  # redimennsionarea in RGBA
-        imagine_convertita = imagine_modificata[:, :,:3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
+        imagine_convertita = imagine_modificata[:, :,
+                             :3]  # stergem al 4-lea element din fiecare pixel (Elementul AFLA) -> RGBA - RGB  + Rezie pentru lag fix
         self.lista_imagini_achizitionate.append(imagine_convertita)
 
-    def playback(self):
-        video = cv2.VideoWriter('VideoOutput.avi', cv2.VideoWriter_fourcc(*'MJPG'), 60, (1280, 720))
-        for frame in self.lista_imagini_achizitionate:
-            cv2.imshow("Simulation video", frame)
-            cv2.waitKey(1) # 16 ms => 1000 / 16 => 60 fps
-            video.write(frame)
-        cv2.destroyAllWindows()
-        video.release()
+    def playback(self, action="save_file"):
+        video = cv2.VideoWriter('VideoOutput.avi', cv2.VideoWriter_fourcc(*'MJPG'),
+                                int(len(self.lista_imagini_achizitionate) / environment.execution_time),
+                                (IM_WIDTH, IM_HEIGHT))
+        if action == "replay":
+            for frame in self.lista_imagini_achizitionate:
+                cv2.imshow("Simulation video", frame)
+                cv2.waitKey(1)  # 16 ms => 1000 / 16 => 60 fps
+            cv2.destroyAllWindows()
+        else:
+            for frame in self.lista_imagini_achizitionate:
+                video.write(frame)
+            video.release()
+
 
 if __name__ == "__main__":
-    environment = setUp("Town03", 50, 150)
+    environment = SetUp("Town07", 50, 50)
     myCar = MyVehicle(environment, "model3")
 
-    environment.run()
-    time.sleep(10)
+    environment.run(15)
     environment.stop()
+
     myCar.playback()
