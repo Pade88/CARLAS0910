@@ -9,7 +9,8 @@
 4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
 5.Salvarea fisierului video (V1.03) -> Rezolvat in (1.04)  
 6.Logging  
-7.Pornire automata server (V1.04)
+7.Pornire automata server (V1.04)  
+8.Comentarii ale codului + formatarea codului
 
 #  Version Log:  
 **1.00**    
@@ -35,3 +36,6 @@ https://youtu.be/8eTqcVskhN4
 ->Pietoni adaugati  
 ->Adaugat town10HD, maps update  
 ->Mici imbunatatiri  
+**1.06**  
+->Modificata functia de playback  
+->Mici modificari de sintaxa si formatare  
