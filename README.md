@@ -1,16 +1,20 @@
 # CARLAS
-# # 30.12.2020  
+# # 10.06.2021  
 # Status:  
 &nbsp;Functional  
 # De adaugat:  
-1.Procesarea imaginii in paralel  
+1.Procesarea imaginii in paralel  -> Rezolvat in (1.07)  
 2.Populare cu pietoni -> Rezolvat in (1.05)  
 3.Rezolvat sacadarea din opencv, https://youtu.be/LnJuMhz1QtU -> Abordat in V1.03 si V1.04  
-4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  
+4.De studiat diferitele tipuri de senzori pentru camera, Semantic segmentation / RGB  -> Adaugat SS in (1.07)  
 5.Salvarea fisierului video (V1.03) -> Rezolvat in (1.04)  
-6.Logging  
+6.Logging  -> Necesar? Posibil drop  
 7.Pornire automata server (V1.04)  
-8.Comentarii ale codului + formatarea codului
+8.Comentarii ale codului + formatarea codului  
+9.Model TensorFlow mai bine generat  
+10. Model HAAR mai bine antrenat  
+11. Metoda de obtinere a imaginilor dupa detectie pentru viitoarele antrenari  
+12. Performanta crescuta in randare? 3 minute de simulare = 48 de minute de procesare. De analizat diferentele dintre .tiff si .png    
 
 #  Version Log:  
 **1.00**    
@@ -39,3 +43,8 @@ https://youtu.be/8eTqcVskhN4
 **1.06**  
 ->Modificata functia de playback  
 ->Mici modificari de sintaxa si formatare  
+**1.07**  
+->Adaugata camera de segmentare semantica
+->Adaugata procesarea in paralel
+->Adaugata detectia semnelor de circulatie cu HAAR Cascade
+->Adaugata detectia obiectelor cu opencv
