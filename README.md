@@ -1,5 +1,5 @@
 # CARLAS
-# # 10.06.2021  
+# # 11.06.2021  
 # Status:  
 &nbsp;Functional  
 # De adaugat:  
@@ -47,4 +47,6 @@ https://youtu.be/8eTqcVskhN4
 ->Adaugata camera de segmentare semantica
 ->Adaugata procesarea in paralel
 ->Adaugata detectia semnelor de circulatie cu HAAR Cascade
-->Adaugata detectia obiectelor cu opencv
+->Adaugata detectia obiectelor cu opencv  
+**1.07.1**  
+->Imbunatatiri aduse la functiile de detectie  
